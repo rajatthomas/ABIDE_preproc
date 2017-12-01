@@ -30,23 +30,36 @@ def construct_paths(data_dir, sub_info):
     E.G o/p path: /data/subject_control01/anat/ and /data/subject_control01/func
     :param data_dir: primary data directory
     :param sub_info: SITE_ID, SUB_ID and DX, info to construct path
-    :return: (from_path, to_path, new_id)
+    :return: df_path -> from_path, to_path, odl_id, new_id
     """
 
     df_path = pd.DataFrame(columns=['FROM_PATH', 'TO_PATH', 'OLD_SUB_ID', 'NEW_SUB_ID'], index=range(len(sub_info)))
 
+    new_id = 0
     for i, row in sub_info.iterrows():
         site = row['SITE_ID']
         subj = str(row['SUB_ID'])
 
         if row['ABIDE'] == 1:
             subj = subj.zfill(7)  # they have two leading zeros in ABIDE_I
-        from_path = osp.join(data_dir, site, )
 
-        df_path.loc[i] = df_path({'FROM_PATH'})
+        from_path = osp.join(data_dir, site, 'session_1')
+
+        if row['DX_GROUP'] == 1:
+            new_subj = 'subject_ASD_' + str(new_id).zfill(4)
+
+        if row['DX_GROUP'] == 2:
+            new_subj = 'subject_CON_' + str(new_id).zfill(4)
+
+        to_path = osp.join(data_dir, 'data', new_subj)
+
+        df_path.loc[new_id] = pd.Series({'FROM_PATH': from_path, 'TO_PATH': to_path, 'OLD_SUB_ID':subj, 'NEW_SUB_ID': str(new_id).zfill(4)})
 
 
+        new_id += 1
 
+
+    return df_path
 
 def transfer_data(pheno_file):
     pass
@@ -59,4 +72,6 @@ if __name__ == '__main__':
     pheno_file = "Phenotypic"
     sub_info = get_subjectinfo(data_dir, pheno_file)
 
-    construct_paths(data_dir, sub_info)
+    path_info = construct_paths(data_dir, sub_info)
+
+    import pdb; pdb.set_trace()
