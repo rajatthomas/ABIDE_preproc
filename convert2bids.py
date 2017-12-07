@@ -71,7 +71,8 @@ def construct_paths(data_dir, sub_info):
 
 def transfer_data(path_info):
 
-    for i in range(len(path_info)):
+    pheno_status = pd.DataFrame(columns=['anat', 'hires', 'rest', 'rest_rpi'], index=range(len(path_info)))
+    for i in range(1905, len(path_info)):
 
         if path_info.iloc[i]['ABIDE'] == 1:
             from_file_anat = osp.join(path_info.iloc[i]['FROM_PATH_ANAT'], 'mprage.nii.gz')
@@ -85,9 +86,25 @@ def transfer_data(path_info):
 
         os.makedirs(path_info.iloc[i]['TO_PATH_ANAT'], exist_ok=True)
         os.makedirs(path_info.iloc[i]['TO_PATH_REST'], exist_ok=True)
+        # import pdb; pdb.set_trace()
+        try:
+            shutil.copyfile(from_file_anat, to_file_anat)
+            pheno_status
+        except FileNotFoundError:
+                from_file_anat = osp.join('/', *from_file_anat.split('/')[:-2], 'hires_1', 'hires.nii.gz')
+                try:
+                    shutil.copyfile(from_file_anat, to_file_anat)
+                except FileNotFoundError:
+                    from_file_anat = osp.join(path_info.iloc[i]['FROM_PATH_ANAT'], 'anat_rpi.nii.gz')
+                    shutil.copyfile(from_file_anat, to_file_anat)
 
-        shutil.copyfile(from_file_anat, to_file_anat)
-        shutil.copyfile(from_file_rest, to_file_rest)
+        try:
+            shutil.copyfile(from_file_rest, to_file_rest)
+        except FileNotFoundError:
+            from_file_rest = osp.join(path_info.iloc[i]['FROM_PATH_REST'], 'rest_rpi.nii.gz')
+            shutil.copyfile(from_file_rest, to_file_rest)
+
+
 
         print('copied {0} of {1} files'.format(i, len(path_info)))
 
