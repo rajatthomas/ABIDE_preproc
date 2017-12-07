@@ -43,21 +43,26 @@ def construct_paths(data_dir, sub_info):
         if row['ABIDE'] == 1:
             subj = subj.zfill(7)  # they have two leading zeros in ABIDE_I
 
-        from_path = osp.join(data_dir, site, 'session_1')
-
         if row['DX_GROUP'] == 1:
             new_subj = 'subject_ASD_' + str(new_id).zfill(4)
 
         if row['DX_GROUP'] == 2:
             new_subj = 'subject_CON_' + str(new_id).zfill(4)
 
+        from_path = osp.join(data_dir, site, subj, 'session_1')
         to_path = osp.join(data_dir, 'data', new_subj)
 
-        df_path.loc[new_id] = pd.Series({'FROM_PATH': from_path, 'TO_PATH': to_path, 'OLD_SUB_ID':subj, 'NEW_SUB_ID': str(new_id).zfill(4)})
+        from_path_anat = osp.join(from_path, 'anat_1')
+        from_path_rest = osp.join(from_path, 'rest_1')
 
+        to_path_rest = osp.join(to_path, 'rest')
+        to_path_anat = osp.join(to_path, 'anat')
+
+        df_path.loc[new_id] = pd.Series({'FROM_PATH_ANAT': from_path_anat, 'TO_PATH_ANAT': to_path_anat,
+                                         'FROM_PATH_REST': from_path_rest, 'TO_PATH_REST': to_path_rest,
+                                         'OLD_SUB_ID': subj, 'NEW_SUB_ID': str(new_id).zfill(4)})
 
         new_id += 1
-
 
     return df_path
 
