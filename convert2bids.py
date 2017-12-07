@@ -1,7 +1,9 @@
-import pandas as pd
+import os
 import os.path as osp
+import shutil
 
 import numpy as np
+import pandas as pd
 
 def get_subjectinfo(data_dir, file):
     """
@@ -33,7 +35,8 @@ def construct_paths(data_dir, sub_info):
     :return: df_path -> from_path, to_path, odl_id, new_id
     """
 
-    df_path = pd.DataFrame(columns=['FROM_PATH', 'TO_PATH', 'OLD_SUB_ID', 'NEW_SUB_ID'], index=range(len(sub_info)))
+    df_path = pd.DataFrame(columns=['FROM_PATH_ANAT', 'TO_PATH_ANAT', 'FROM_PATH_REST', 'TO_PATH_REST',
+                                    'OLD_SUB_ID', 'NEW_SUB_ID', 'ABIDE'], index=range(len(sub_info)))
 
     new_id = 0
     for i, row in sub_info.iterrows():
@@ -60,16 +63,33 @@ def construct_paths(data_dir, sub_info):
 
         df_path.loc[new_id] = pd.Series({'FROM_PATH_ANAT': from_path_anat, 'TO_PATH_ANAT': to_path_anat,
                                          'FROM_PATH_REST': from_path_rest, 'TO_PATH_REST': to_path_rest,
-                                         'OLD_SUB_ID': subj, 'NEW_SUB_ID': str(new_id).zfill(4)})
+                                         'OLD_SUB_ID': subj, 'NEW_SUB_ID': str(new_id).zfill(4), 'ABIDE': row['ABIDE']})
 
         new_id += 1
 
     return df_path
 
-def transfer_data(pheno_file):
-    pass
+def transfer_data(path_info):
 
+    for i in range(len(path_info)):
 
+        if path_info.iloc[i]['ABIDE'] == 1:
+            from_file_anat = osp.join(path_info.iloc[i]['FROM_PATH_ANAT'], 'mprage.nii.gz')
+        else:
+            from_file_anat = osp.join(path_info.iloc[i]['FROM_PATH_ANAT'], 'anat.nii.gz')
+
+        from_file_rest = osp.join(path_info.iloc[i]['FROM_PATH_REST'], 'rest.nii.gz');
+
+        to_file_anat = osp.join(path_info.iloc[i]['TO_PATH_ANAT'], 'anat.nii.gz')
+        to_file_rest = osp.join(path_info.iloc[i]['TO_PATH_REST'], 'rest.nii.gz')
+
+        os.makedirs(path_info.iloc[i]['TO_PATH_ANAT'], exist_ok=True)
+        os.makedirs(path_info.iloc[i]['TO_PATH_REST'], exist_ok=True)
+
+        shutil.copyfile(from_file_anat, to_file_anat)
+        shutil.copyfile(from_file_rest, to_file_rest)
+
+        print('copied {0} of {1} files'.format(i, len(path_info)))
 
 if __name__ == '__main__':
 
@@ -78,5 +98,4 @@ if __name__ == '__main__':
     sub_info = get_subjectinfo(data_dir, pheno_file)
 
     path_info = construct_paths(data_dir, sub_info)
-
-    import pdb; pdb.set_trace()
+    transfer_data(path_info)
